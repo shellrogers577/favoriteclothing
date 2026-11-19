@@ -6,6 +6,7 @@ A responsive storefront and admin dashboard built with React, Vite, and plain CS
 
 1. Create a Supabase project. In **Authentication → Users**, add the store owner's email and password. Disable public sign-ups in the Auth provider settings.
 2. Open **SQL Editor**, paste the contents of [`supabase/setup.sql`](./supabase/setup.sql), and run it. This creates the products table, public catalog read access, admin-only write policies, the image bucket, and the eight starter products.
+   If the project is already set up, run this script again to add the back-photo column and raise the product image bucket limit to 10 MB per image. Existing products will need a back photo added from Admin Studio before they can be saved with the new form.
 3. In **Authentication → Users**, copy the owner account's UUID. In SQL Editor, replace the placeholder and run:
 
    ```sql
@@ -34,4 +35,4 @@ Deploy the generated `dist/` folder to a static host such as Netlify or Vercel. 
 npm run build
 ```
 
-Products and uploaded images are shared through Supabase. Cart contents stay local to each visitor's browser. Orders are prepared as WhatsApp messages to **+234 705 088 1599**.
+Products and uploaded images are shared through Supabase. Admin uploads accept JPG, PNG, WEBP, and GIF files up to 10 MB per photo; add front and back photos for each product. Customers can switch between those views and open either image larger. Cart contents stay local to each visitor's browser. Orders are prepared as WhatsApp messages to **+234 705 088 1599**.

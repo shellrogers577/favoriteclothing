@@ -1,58 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { formatNaira, whatsappLink } from "../utils.js";
 
-const filters = [
-  "All",
-  "Tees",
-  "Caps & Beanies",
-  "Track Pants",
-  "Tanks",
-  "Accessories",
-];
-const collections = [
-  {
-    title: "TRUCKER CAPS",
-    note: "Make your mark",
-    image:
-      "https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=700&q=80",
-    filter: "Caps & Beanies",
-  },
-  {
-    title: "CAMOUFLAGE CAPS",
-    note: "Move with purpose",
-    image:
-      "https://images.unsplash.com/photo-1521369909029-2afed882baee?auto=format&fit=crop&w=700&q=80",
-    filter: "Caps & Beanies",
-  },
-  {
-    title: "BEANIES",
-    note: "Everyday essentials",
-    image:
-      "https://images.unsplash.com/photo-1576871337622-98d48d1cf531?auto=format&fit=crop&w=700&q=80",
-    filter: "Caps & Beanies",
-  },
-  {
-    title: "HEAD WARMERS",
-    note: "Keep your focus",
-    image:
-      "https://images.unsplash.com/photo-1517941823-815bea90d291?auto=format&fit=crop&w=700&q=80",
-    filter: "Accessories",
-  },
-  {
-    title: "TEES & TRACK PANTS",
-    note: "Built for the everyday",
-    image:
-      "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=700&q=80",
-    filter: "Tees",
-  },
-  {
-    title: "ACCESSORIES",
-    note: "Carry your story",
-    image:
-      "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=700&q=80",
-    filter: "Accessories",
-  },
-];
+const filters = ["All", "Tees", "Clothing", "Trousers"];
 const faqs = [
   [
     "How do I place an order?",
@@ -72,18 +21,105 @@ const faqs = [
   ],
 ];
 
-function ProductCard({ product, onAdd, onQuickOrder }) {
+function ProductImageViewer({ product, side, onSideChange, onClose }) {
+  const hasBackImage = Boolean(product.back_image)
+  const showingBack = side === "back" && hasBackImage;
+
+  useEffect(() => {
+    function closeOnEscape(event) {
+      if (event.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [onClose]);
+
+  return (
+    <div
+      className="product-viewer-backdrop"
+      role="presentation"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <section
+        className="product-viewer"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="product-viewer-title"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        <div className="product-viewer-heading">
+          <div>
+            <span className="eyebrow">PRODUCT DETAILS</span>
+            <h2 id="product-viewer-title">{product.name}</h2>
+          </div>
+          <button
+            type="button"
+            className="icon-close"
+            onClick={onClose}
+            aria-label="Close product image"
+          >
+            ×
+          </button>
+        </div>
+        <img
+          className="product-viewer-image"
+          src={showingBack ? product.back_image : product.image}
+          alt={`${product.name} ${showingBack ? "back" : "front"} view`}
+        />
+        <div className="product-view-controls product-viewer-controls" role="group" aria-label="Product image side">
+          <button
+            type="button"
+            className={!showingBack ? "view-selected" : ""}
+            aria-pressed={!showingBack}
+            onClick={() => onSideChange("front")}
+          >
+            FRONT
+          </button>
+          <button
+            type="button"
+            className={showingBack ? "view-selected" : ""}
+            aria-pressed={showingBack}
+            disabled={!hasBackImage}
+            onClick={() => onSideChange("back")}
+          >
+            BACK
+          </button>
+          {!hasBackImage && <small>The back photo is not available yet.</small>}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function matchesCategory(product, filter) {
+  if (filter === "All") return true;
+  if (filter === "Tees") return product.category === "Tees";
+  if (filter === "Trousers") return product.category === "Track Pants";
+  return ["Caps & Beanies", "Tanks", "Accessories"].includes(product.category);
+}
+
+function ProductCard({ product, onAdd, onQuickOrder, onView }) {
   const [size, setSize] = useState(product.sizes?.[0] || "M");
+  const [side, setSide] = useState("front");
   const isSoldOut = product.stock === 0;
+  const showingBack = side === "back" && Boolean(product.back_image);
   return (
     <article className="product-card">
       <div className="product-image-wrap">
-        <img
-          src={product.image}
-          alt={product.name}
-          className="product-image"
-          loading="lazy"
-        />
+        <button
+          type="button"
+          className="product-image-trigger"
+          onClick={() => onView(product, showingBack ? "back" : "front")}
+          aria-label={`View ${product.name} ${showingBack ? "back" : "front"} image larger`}
+        >
+          <img
+            src={showingBack ? product.back_image : product.image}
+            alt={`${product.name} ${showingBack ? "back" : "front"} view`}
+            className="product-image"
+            loading="lazy"
+          />
+        </button>
         {product.badge === "New Arrival" && (
           <span className="product-badge">NEW</span>
         )}
@@ -97,14 +133,30 @@ function ProductCard({ product, onAdd, onQuickOrder }) {
           ↗
         </button>
       </div>
+      <div className="product-view-controls" role="group" aria-label={`${product.name} image side`}>
+        <button
+          type="button"
+          className={!showingBack ? "view-selected" : ""}
+          aria-pressed={!showingBack}
+          onClick={() => setSide("front")}
+        >
+          FRONT
+        </button>
+        <button
+          type="button"
+          className={showingBack ? "view-selected" : ""}
+          aria-pressed={showingBack}
+          disabled={!product.back_image}
+          title={!product.back_image ? "Back photo not added yet" : undefined}
+          onClick={() => setSide("back")}
+        >
+          BACK
+        </button>
+      </div>
       <div className="product-meta">
         <div className="product-title-line">
           <h3>{product.name}</h3>
           <span className="product-price">{formatNaira(product.price)}</span>
-        </div>
-        <div className="rating">
-          <span aria-label={`${product.rating} out of 5 stars`}>★★★★★</span>
-          <small>{product.rating}</small>
         </div>
         <div className="size-row" aria-label="Choose a size">
           {(product.sizes?.length ? product.sizes : ["S", "M", "L", "XL"]).map(
@@ -144,30 +196,16 @@ function ProductCard({ product, onAdd, onQuickOrder }) {
 
 function Header({ cartCount, onAdmin, onCart, isStoreAdmin }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [query, setQuery] = useState("");
 
   useEffect(() => {
     function onKeyDown(event) {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
-        event.preventDefault();
-        setSearchOpen(true);
-        window.requestAnimationFrame(() =>
-          document.querySelector("#product-search")?.focus(),
-        );
-      }
       if (event.key === "Escape") {
-        setSearchOpen(false);
         setMenuOpen(false);
       }
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
-
-  useEffect(() => {
-    window.dispatchEvent(new CustomEvent("store-search", { detail: query }));
-  }, [query]);
 
   return (
     <>
@@ -195,19 +233,20 @@ function Header({ cartCount, onAdmin, onCart, isStoreAdmin }) {
           className={`main-nav ${menuOpen ? "nav-open" : ""}`}
           aria-label="Main navigation"
         >
-          {["Home", "Shop", "Collections", "FAQ", "Checkout"].map(
-            (item, index) => (
+          {[
+            ["Home", "#home"],
+            ["Shop", "#shop"],
+            ["FAQ", "#faq"],
+            ["Checkout", "#shop"],
+          ].map(([item, href]) => (
               <a
                 key={item}
-                href={
-                  ["#home", "#shop", "#collections", "#faq", "#shop"][index]
-                }
+                href={href}
                 onClick={() => setMenuOpen(false)}
               >
                 {item}
               </a>
-            ),
-          )}
+            ))}
           <button
             type="button"
             className="mobile-admin-link"
@@ -220,35 +259,25 @@ function Header({ cartCount, onAdmin, onCart, isStoreAdmin }) {
           </button>
         </nav>
         <div className="header-tools">
-          <div
-            className={`search-box ${searchOpen ? "search-active" : ""}`}
-            onClick={() => {
-              if (!searchOpen) {
-                setSearchOpen(true);
-                window.requestAnimationFrame(() =>
-                  document.querySelector("#product-search")?.focus(),
-                );
-              }
-            }}
-          >
-            <span className="search-icon">⌕</span>
-            <input
-              id="product-search"
-              aria-label="Search products"
-              placeholder="Search..."
-              value={query}
-              onFocus={() => setSearchOpen(true)}
-              onChange={(event) => setQuery(event.target.value)}
-            />
-            <kbd>⌘ / CTRL K</kbd>
-          </div>
           <button
             className="cart-button"
             type="button"
             onClick={onCart}
-            aria-label={`Open cart, ${cartCount} items`}
+            aria-label={`Open cart, ${cartCount} ${cartCount === 1 ? "item" : "items"}`}
           >
-            <span>♧</span>
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M3 3h2l2.4 12.2a2 2 0 0 0 2 1.6h8.8a2 2 0 0 0 2-1.6L22 8H6" />
+              <circle cx="10" cy="21" r="1" />
+              <circle cx="18" cy="21" r="1" />
+            </svg>
             <i>{cartCount}</i>
           </button>
           <button type="button" className="admin-login" onClick={onAdmin}>
@@ -407,14 +436,13 @@ function Footer() {
             made with care and purpose.
           </p>
           <div className="social-links">
-            <a href="https://instagram.com" target="_blank" rel="noreferrer">
-              IG ↗
-            </a>
-            <a href="https://tiktok.com" target="_blank" rel="noreferrer">
+            <a
+              href="https://www.tiktok.com/@amaka.e2"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="TikTok profile @amaka.e2"
+            >
               TK ↗
-            </a>
-            <a href="https://snapchat.com" target="_blank" rel="noreferrer">
-              SC ↗
             </a>
           </div>
         </div>
@@ -488,32 +516,18 @@ export default function Storefront({
   statusMessage,
 }) {
   const [activeFilter, setActiveFilter] = useState("All");
-  const [search, setSearch] = useState("");
   const [cartOpen, setCartOpen] = useState(false);
   const [visibleCount, setVisibleCount] = useState(8);
   const [toast, setToast] = useState("");
-
-  useEffect(() => {
-    function onSearch(event) {
-      setSearch(event.detail || "");
-    }
-    window.addEventListener("store-search", onSearch);
-    return () => window.removeEventListener("store-search", onSearch);
-  }, []);
+  const [viewingProduct, setViewingProduct] = useState(null);
+  const [viewerSide, setViewerSide] = useState("front");
 
   const displayedProducts = useMemo(
     () =>
       products
-        .filter((product) => {
-          const matchesFilter =
-            activeFilter === "All" || product.category === activeFilter;
-          const matchesSearch = `${product.name} ${product.category}`
-            .toLowerCase()
-            .includes(search.toLowerCase());
-          return matchesFilter && matchesSearch;
-        })
+        .filter((product) => matchesCategory(product, activeFilter))
         .slice(0, visibleCount),
-    [products, activeFilter, search, visibleCount],
+    [products, activeFilter, visibleCount],
   );
 
   function add(product, size) {
@@ -530,9 +544,9 @@ export default function Storefront({
       "noopener,noreferrer",
     );
   }
-  function selectCollection(filter) {
-    setActiveFilter(filter);
-    document.querySelector("#shop")?.scrollIntoView({ behavior: "smooth" });
+  function viewProductImage(product, side) {
+    setViewingProduct(product);
+    setViewerSide(side);
   }
 
   return (
@@ -581,37 +595,6 @@ export default function Storefront({
           </div>
         </section>
 
-        <section className="collection-section section-pad" id="collections">
-          <div className="section-heading">
-            <div>
-              <span className="eyebrow">FIND YOUR EVERYDAY</span>
-              <h2>THE COLLECTIONS</h2>
-            </div>
-            <p>Pieces to move in. Stories to stand for.</p>
-          </div>
-          <div className="collection-strip">
-            {collections.map((collection, index) => (
-              <article
-                className="collection-card"
-                key={collection.title}
-                onClick={() => selectCollection(collection.filter)}
-              >
-                <img src={collection.image} alt="" loading="lazy" />
-                <div className="collection-overlay" />
-                <div className="collection-copy">
-                  <span>0{index + 1} / COLLECTION</span>
-                  <h3>{collection.title}</h3>
-                  <p>{collection.note}</p>
-                  <button type="button">SHOP NOW ↗</button>
-                </div>
-              </article>
-            ))}
-          </div>
-          <div className="collection-scroll-note">
-            SCROLL TO EXPLORE <span>⟶</span>
-          </div>
-        </section>
-
         <section className="shop-section section-pad" id="shop">
           <div className="section-heading shop-heading">
             <div>
@@ -647,12 +630,6 @@ export default function Storefront({
               </button>
             ))}
           </div>
-          {search && (
-            <p className="search-results">
-              Showing results for “{search}”{" "}
-              <button onClick={() => setSearch("")}>Clear</button>
-            </p>
-          )}
           {catalogLoading ? (
             <div className="no-results">Loading the latest pieces…</div>
           ) : displayedProducts.length ? (
@@ -663,17 +640,17 @@ export default function Storefront({
                   product={product}
                   onAdd={add}
                   onQuickOrder={quickOrder}
+                  onView={viewProductImage}
                 />
               ))}
             </div>
           ) : (
             <div className="no-results">
-              No pieces found. Try another search or collection.
+              No pieces found in this category.
             </div>
           )}
           {products.filter(
-            (product) =>
-              activeFilter === "All" || product.category === activeFilter,
+            (product) => matchesCategory(product, activeFilter),
           ).length > visibleCount && (
             <button
               className="button button-outline see-more"
@@ -749,6 +726,14 @@ export default function Storefront({
         onQuantity={onQuantity}
         onRemove={onRemove}
       />
+      {viewingProduct && (
+        <ProductImageViewer
+          product={viewingProduct}
+          side={viewerSide}
+          onSideChange={setViewerSide}
+          onClose={() => setViewingProduct(null)}
+        />
+      )}
       {toast && (
         <div className="toast" role="status">
           {toast}

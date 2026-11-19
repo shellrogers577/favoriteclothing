@@ -8,9 +8,12 @@ create table if not exists public.products (
   sizes text[] not null default array['S', 'M', 'L', 'XL'],
   description text not null default '',
   image text not null,
+  back_image text,
   stock integer not null default 10 check (stock >= 0),
   created_at timestamptz not null default now()
 );
+
+alter table public.products add column if not exists back_image text;
 
 create table if not exists public.store_admins (
   user_id uuid primary key references auth.users(id) on delete cascade
@@ -84,9 +87,18 @@ values
   ('DAILY CARRY CROSSBODY', 24999, 'Accessories', 'Standard', 4.5, array['S','M','L','XL'], 'A compact carry-all designed for your daily essentials.', 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=900&q=85', 5)
 on conflict (name) do nothing;
 
-insert into storage.buckets (id, name, public)
-values ('product-images', 'product-images', true)
-on conflict (id) do update set public = excluded.public;
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'product-images',
+  'product-images',
+  true,
+  10485760,
+  array['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+)
+on conflict (id) do update
+set public = excluded.public,
+    file_size_limit = excluded.file_size_limit,
+    allowed_mime_types = excluded.allowed_mime_types;
 
 drop policy if exists "Anyone can view product images" on storage.objects;
 create policy "Anyone can view product images"

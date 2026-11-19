@@ -52,6 +52,7 @@ export default function App() {
     if (!supabase) return undefined
 
     let active = true
+    let lastRefreshAt = 0
     async function loadCatalog() {
       try {
         const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: false })
@@ -69,8 +70,21 @@ export default function App() {
         if (active) setCatalogLoading(false)
       }
     }
+    function refreshWhenVisible() {
+      if (document.visibilityState !== 'visible' || Date.now() - lastRefreshAt < 5000) return
+      lastRefreshAt = Date.now()
+      lastRefreshAt = Date.now()
+      loadCatalog()
+    }
+
     loadCatalog()
-    return () => { active = false }
+    window.addEventListener('focus', refreshWhenVisible)
+    document.addEventListener('visibilitychange', refreshWhenVisible)
+    return () => {
+      active = false
+      window.removeEventListener('focus', refreshWhenVisible)
+      document.removeEventListener('visibilitychange', refreshWhenVisible)
+    }
   }, [])
 
   useEffect(() => {
@@ -153,18 +167,25 @@ export default function App() {
   async function saveProduct(product) {
     if (!supabase || !isStoreAdmin) return false
     try {
-      let image = product.image
-      if (image.startsWith('data:')) {
+      async function saveImage(image) {
+        if (!image?.startsWith('data:')) return image || null
         const response = await fetch(image)
+        if (!response.ok) throw new Error('The selected product photo could not be read.')
         const blob = await response.blob()
-        const extension = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif' }[blob.type] || 'img'
+        if (blob.size > 10 * 1024 * 1024) throw new Error('Product photos must be 10 MB or smaller.')
+        const extension = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif' }[blob.type]
+        if (!extension) throw new Error('Use a JPG, PNG, WEBP, or GIF product photo.')
         const path = `${crypto.randomUUID()}.${extension}`
         const { error: uploadError } = await supabase.storage.from('product-images').upload(path, blob, { contentType: blob.type })
         if (uploadError) throw uploadError
-        image = supabase.storage.from('product-images').getPublicUrl(path).data.publicUrl
+        return supabase.storage.from('product-images').getPublicUrl(path).data.publicUrl
       }
 
-      const payload = { ...product, image }
+      const payload = {
+        ...product,
+        image: await saveImage(product.image),
+        back_image: await saveImage(product.back_image),
+      }
       delete payload.created_at
       if (!payload.id) delete payload.id
       const { data, error } = await supabase.from('products').upsert(payload).select().single()
