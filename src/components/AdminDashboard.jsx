@@ -2,11 +2,11 @@ import { useMemo, useState } from "react";
 import { formatNaira } from "../utils.js";
 
 const categories = [
-  "Tees",
-  "Caps & Beanies",
-  "Track Pants",
-  "Tanks",
-  "Accessories",
+  "Tee",
+  "Trousers",
+  "Bag",
+  "Short",
+  "Top",
 ];
 const sizesList = ["S", "M", "L", "XL"];
 const maxImageSize = 10 * 1024 * 1024;
@@ -33,7 +33,7 @@ function getPrice(product) {
 const emptyProduct = {
   name: "",
   price: "",
-  category: "Tees",
+  category: "Tee",
   badge: "Standard",
   sizes: ["S", "M", "L", "XL"],
   description: "",

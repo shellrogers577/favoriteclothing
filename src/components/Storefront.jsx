@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { formatNaira, whatsappLink } from "../utils.js";
 
-const filters = ["All", "Tees", "Clothing", "Trousers"];
+const filters = ["All", "Tee", "Trousers", "Bag", "Short", "Top"];
 const faqs = [
   [
     "How do I place an order?",
@@ -94,9 +94,7 @@ function ProductImageViewer({ product, side, onSideChange, onClose }) {
 
 function matchesCategory(product, filter) {
   if (filter === "All") return true;
-  if (filter === "Tees") return product.category === "Tees";
-  if (filter === "Trousers") return product.category === "Track Pants";
-  return ["Caps & Beanies", "Tanks", "Accessories"].includes(product.category);
+  return product.category === filter;
 }
 
 function ProductCard({ product, onAdd, onQuickOrder, onView }) {
@@ -465,8 +463,8 @@ function Footer() {
         </div>
         <div className="footer-column footer-contact">
           <h3>GET IN TOUCH</h3>
-          <a href="mailto:hello@favoriteclothing.ng">
-            hello@favoriteclothing.ng
+          <a href="mailto:amakaezurike86@gmail.com">
+            amakaezurike86@gmail.com
           </a>
           <a href="tel:+2347050881599">+234 705 088 1599</a>
         </div>
