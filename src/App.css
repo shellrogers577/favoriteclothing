@@ -100,11 +100,12 @@
 
 /* Brand manifesto and FAQ */
 .manifesto { position: relative; min-height: 470px; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; padding: 72px 20px; color: white; background: var(--ink); text-align: center; }
+.manifesto > *:not(.manifesto-cross) { position: relative; z-index: 1; }
 .manifesto .eyebrow { color: #aaa; }
 .manifesto h2 { position: relative; z-index: 1; margin: 18px 0; font-family: 'Space Grotesk',sans-serif; font-size: clamp(50px, 8vw, 94px); line-height: .83; letter-spacing: -.09em; }
 .manifesto p { max-width: 400px; margin: 6px 0 22px; color: #bbb; font-size: 12px; line-height: 1.7; }
 .manifesto > a { font-size: 9px; font-weight: 700; letter-spacing: .12em; }
-.manifesto-cross { position: absolute; right: 9%; bottom: -90px; color: #242424; font-size: 290px; line-height: 1; }
+.manifesto-cross { position: absolute; z-index: 0; right: 9%; bottom: -90px; color: #242424; font-size: 290px; line-height: 1; pointer-events: none; }
 .faq-section { display: grid; grid-template-columns: .8fr 1.2fr; gap: 10%; padding-top: 105px; padding-bottom: 115px; }
 .faq-intro h2 { margin: 15px 0; font-family: 'Space Grotesk',sans-serif; font-size: clamp(48px, 6vw, 72px); letter-spacing: -.08em; line-height: .83; }
 .faq-intro p { max-width: 235px; color: #777; font-size: 12px; line-height: 1.6; }
@@ -332,7 +333,10 @@
   .whatsapp-order { display: none; }
   .size-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 3px; margin: 8px 0; }
   .size-pill { width: auto; min-width: 0; height: 24px; font-size: 7px; }
-  .manifesto { min-height: 395px; }
+  .manifesto { min-height: 395px; padding: 64px 20px 80px; }
+  .manifesto h2 { max-width: 100%; font-size: clamp(38px, 10.5vw, 60px); line-height: .9; }
+  .manifesto p { width: min(100%, 360px); font-size: 12px; }
+  .manifesto-cross { right: 50%; bottom: -145px; font-size: 220px; transform: translateX(50%); }
   .faq-section { grid-template-columns: 1fr; gap: 32px; padding-top: 73px; padding-bottom: 80px; }
   .faq-intro h2 { font-size: 58px; }
   .faq-item summary { min-height: 62px; gap: 13px; }
