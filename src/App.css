@@ -99,7 +99,7 @@
 .manifesto h2 { position: relative; z-index: 1; margin: 18px 0; font-family: 'Space Grotesk',sans-serif; font-size: clamp(50px, 8vw, 94px); line-height: .83; letter-spacing: -.09em; }
 .manifesto p { max-width: 400px; margin: 6px 0 22px; color: #bbb; font-size: 12px; line-height: 1.7; }
 .manifesto > a { font-size: 9px; font-weight: 700; letter-spacing: .12em; }
-.manifesto-cross { position: absolute; z-index: 0; right: 9%; bottom: -90px; color: #242424; font-size: 290px; line-height: 1; pointer-events: none; }
+.manifesto-cross { position: absolute; z-index: 0; right: 9%; bottom: -90px; width: 290px; height: 290px; color: #242424; fill: currentColor; opacity: .8; pointer-events: none; }
 .faq-section { display: grid; grid-template-columns: .8fr 1.2fr; gap: 10%; padding-top: 105px; padding-bottom: 115px; }
 .faq-intro h2 { margin: 15px 0; font-family: 'Space Grotesk',sans-serif; font-size: clamp(48px, 6vw, 72px); letter-spacing: -.08em; line-height: .83; }
 .faq-intro p { max-width: 235px; color: #777; font-size: 12px; line-height: 1.6; }
@@ -323,7 +323,7 @@
   .manifesto { min-height: 395px; padding: 64px 20px 80px; }
   .manifesto h2 { max-width: 100%; font-size: clamp(38px, 10.5vw, 60px); line-height: .9; }
   .manifesto p { width: min(100%, 360px); font-size: 12px; }
-  .manifesto-cross { right: 50%; bottom: -145px; font-size: 220px; transform: translateX(50%); }
+  .manifesto-cross { right: -14px; bottom: -32px; width: 112px; height: 112px; }
   .faq-section { grid-template-columns: 1fr; gap: 32px; padding-top: 73px; padding-bottom: 80px; }
   .faq-intro h2 { font-size: 58px; }
   .faq-item summary { min-height: 62px; gap: 13px; }
@@ -392,6 +392,7 @@
   .size-pill { height: 22px; font-size: 7px; }
   .add-button { min-height: 30px; font-size: 7px; }
   .floating-whatsapp { right: 12px; bottom: 12px; padding: 11px 13px; }
+  .manifesto-cross { right: -10px; bottom: -24px; width: 82px; height: 82px; }
   .footer-main { column-gap: 12px; }
   .footer-column a { font-size: 10px; }
   .login-modal, .confirm-modal { padding: 32px 22px; }

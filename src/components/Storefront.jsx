@@ -673,7 +673,13 @@ export default function Storefront({
             choosing their own direction.
           </p>
           <a href="#shop">DISCOVER YOUR PIECE ↗</a>
-          <span className="manifesto-cross">✳</span>
+          <svg
+            className="manifesto-cross"
+            viewBox="0 0 100 100"
+            aria-hidden="true"
+          >
+            <path d="M47 0h6l3 38 25-27 4 4-27 25 38 3v6l-38 3 27 25-4 4-25-27-3 38h-6l-3-38-25 27-4-4 27-25-38-3v-6l38-3L15 15l4-4 25 27z" />
+          </svg>
         </section>
 
         <section className="faq-section section-pad" id="faq">
