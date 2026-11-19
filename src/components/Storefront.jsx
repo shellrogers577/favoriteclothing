@@ -1,0 +1,762 @@
+import { useEffect, useMemo, useState } from "react";
+import { formatNaira, whatsappLink } from "../utils.js";
+
+const filters = [
+  "All",
+  "Tees",
+  "Caps & Beanies",
+  "Track Pants",
+  "Tanks",
+  "Accessories",
+];
+const collections = [
+  {
+    title: "TRUCKER CAPS",
+    note: "Make your mark",
+    image:
+      "https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=700&q=80",
+    filter: "Caps & Beanies",
+  },
+  {
+    title: "CAMOUFLAGE CAPS",
+    note: "Move with purpose",
+    image:
+      "https://images.unsplash.com/photo-1521369909029-2afed882baee?auto=format&fit=crop&w=700&q=80",
+    filter: "Caps & Beanies",
+  },
+  {
+    title: "BEANIES",
+    note: "Everyday essentials",
+    image:
+      "https://images.unsplash.com/photo-1576871337622-98d48d1cf531?auto=format&fit=crop&w=700&q=80",
+    filter: "Caps & Beanies",
+  },
+  {
+    title: "HEAD WARMERS",
+    note: "Keep your focus",
+    image:
+      "https://images.unsplash.com/photo-1517941823-815bea90d291?auto=format&fit=crop&w=700&q=80",
+    filter: "Accessories",
+  },
+  {
+    title: "TEES & TRACK PANTS",
+    note: "Built for the everyday",
+    image:
+      "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=700&q=80",
+    filter: "Tees",
+  },
+  {
+    title: "ACCESSORIES",
+    note: "Carry your story",
+    image:
+      "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=700&q=80",
+    filter: "Accessories",
+  },
+];
+const faqs = [
+  [
+    "How do I place an order?",
+    "Add your favourite pieces to cart, choose a size, then check out through WhatsApp. We’ll confirm your order and delivery details with you.",
+  ],
+  [
+    "Do you deliver across Nigeria?",
+    "Yes. We deliver nationwide. Delivery timing and fees are confirmed when we follow up on your WhatsApp order.",
+  ],
+  [
+    "Can I exchange an item?",
+    "If your item is unworn and still in its original condition, contact us within 7 days of delivery and we’ll help with an exchange.",
+  ],
+  [
+    "How do I choose my size?",
+    "Choose your usual size for a relaxed everyday fit. Message us on WhatsApp if you’d like help with a specific piece.",
+  ],
+];
+
+function ProductCard({ product, onAdd, onQuickOrder }) {
+  const [size, setSize] = useState(product.sizes?.[0] || "M");
+  const isSoldOut = product.stock === 0;
+  return (
+    <article className="product-card">
+      <div className="product-image-wrap">
+        <img
+          src={product.image}
+          alt={product.name}
+          className="product-image"
+          loading="lazy"
+        />
+        {product.badge === "New Arrival" && (
+          <span className="product-badge">NEW</span>
+        )}
+        {isSoldOut && <span className="sold-overlay">SOLD OUT</span>}
+        <button
+          className="quick-order"
+          type="button"
+          onClick={() => onQuickOrder(product, size)}
+          aria-label={`Order ${product.name} via WhatsApp`}
+        >
+          ↗
+        </button>
+      </div>
+      <div className="product-meta">
+        <div className="product-title-line">
+          <h3>{product.name}</h3>
+          <span className="product-price">{formatNaira(product.price)}</span>
+        </div>
+        <div className="rating">
+          <span aria-label={`${product.rating} out of 5 stars`}>★★★★★</span>
+          <small>{product.rating}</small>
+        </div>
+        <div className="size-row" aria-label="Choose a size">
+          {(product.sizes?.length ? product.sizes : ["S", "M", "L", "XL"]).map(
+            (option) => (
+              <button
+                type="button"
+                key={option}
+                className={`size-pill ${size === option ? "selected" : ""}`}
+                onClick={() => setSize(option)}
+              >
+                {option}
+              </button>
+            ),
+          )}
+        </div>
+        <div className="product-actions">
+          <button
+            type="button"
+            className="button button-dark add-button"
+            disabled={isSoldOut}
+            onClick={() => onAdd(product, size)}
+          >
+            {isSoldOut ? "SOLD OUT" : "ADD TO CART"}
+          </button>
+          <button
+            type="button"
+            className="whatsapp-order"
+            onClick={() => onQuickOrder(product, size)}
+          >
+            WHATSAPP ↗
+          </button>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function Header({ cartCount, onAdmin, onCart, isStoreAdmin }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [query, setQuery] = useState("");
+
+  useEffect(() => {
+    function onKeyDown(event) {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        setSearchOpen(true);
+        window.requestAnimationFrame(() =>
+          document.querySelector("#product-search")?.focus(),
+        );
+      }
+      if (event.key === "Escape") {
+        setSearchOpen(false);
+        setMenuOpen(false);
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent("store-search", { detail: query }));
+  }, [query]);
+
+  return (
+    <>
+      <div className="announcement">
+        EXCLUSIVE DROPS &amp; EARLY ACCESS <span>✦</span> MADE WITH PURPOSE
+      </div>
+      <header className="site-header">
+        <button
+          className="mobile-menu-button"
+          type="button"
+          onClick={() => setMenuOpen(!menuOpen)}
+          aria-label={menuOpen ? "Close menu" : "Open menu"}
+        >
+          <span>{menuOpen ? "×" : "☰"}</span>
+        </button>
+        <a
+          className="wordmark"
+          href="#home"
+          aria-label="Favorite Clothing home"
+        >
+          FAVORITE<span>®</span>
+          <small>CLOTHING</small>
+        </a>
+        <nav
+          className={`main-nav ${menuOpen ? "nav-open" : ""}`}
+          aria-label="Main navigation"
+        >
+          {["Home", "Shop", "Collections", "FAQ", "Checkout"].map(
+            (item, index) => (
+              <a
+                key={item}
+                href={
+                  ["#home", "#shop", "#collections", "#faq", "#shop"][index]
+                }
+                onClick={() => setMenuOpen(false)}
+              >
+                {item}
+              </a>
+            ),
+          )}
+          <button
+            type="button"
+            className="mobile-admin-link"
+            onClick={() => {
+              setMenuOpen(false);
+              onAdmin();
+            }}
+          >
+            {isStoreAdmin ? "Admin Studio" : "Admin Login"}
+          </button>
+        </nav>
+        <div className="header-tools">
+          <div
+            className={`search-box ${searchOpen ? "search-active" : ""}`}
+            onClick={() => {
+              if (!searchOpen) {
+                setSearchOpen(true);
+                window.requestAnimationFrame(() =>
+                  document.querySelector("#product-search")?.focus(),
+                );
+              }
+            }}
+          >
+            <span className="search-icon">⌕</span>
+            <input
+              id="product-search"
+              aria-label="Search products"
+              placeholder="Search..."
+              value={query}
+              onFocus={() => setSearchOpen(true)}
+              onChange={(event) => setQuery(event.target.value)}
+            />
+            <kbd>⌘ / CTRL K</kbd>
+          </div>
+          <button
+            className="cart-button"
+            type="button"
+            onClick={onCart}
+            aria-label={`Open cart, ${cartCount} items`}
+          >
+            <span>♧</span>
+            <i>{cartCount}</i>
+          </button>
+          <button type="button" className="admin-login" onClick={onAdmin}>
+            {isStoreAdmin ? "ADMIN STUDIO" : "ADMIN LOGIN"}
+          </button>
+        </div>
+      </header>
+    </>
+  );
+}
+
+function CartDrawer({ open, onClose, products, cart, onQuantity, onRemove }) {
+  const lines = cart
+    .map((item) => ({
+      ...item,
+      product: products.find((product) => product.id === item.id),
+    }))
+    .filter((item) => item.product);
+  const subtotal = lines.reduce(
+    (total, item) => total + item.product.price * item.quantity,
+    0,
+  );
+  function checkout() {
+    const summary = lines
+      .map(
+        (item) =>
+          `${item.quantity} × ${item.product.name} (Size ${item.size}) — ${formatNaira(item.product.price * item.quantity)}`,
+      )
+      .join("\n");
+    window.open(
+      whatsappLink(
+        `Hello Favorite Clothing, I’d like to place this order:\n\n${summary}\n\nSubtotal: ${formatNaira(subtotal)}\n\nPlease confirm delivery details.`,
+      ),
+      "_blank",
+      "noopener,noreferrer",
+    );
+  }
+  return (
+    <>
+      {open && (
+        <button
+          className="drawer-scrim"
+          onClick={onClose}
+          aria-label="Close cart"
+        />
+      )}
+      <aside
+        className={`cart-drawer ${open ? "drawer-open" : ""}`}
+        aria-hidden={!open}
+        inert={!open}
+      >
+        <div className="drawer-heading">
+          <div>
+            <span className="eyebrow">YOUR SELECTION</span>
+            <h2>
+              Shopping cart{" "}
+              <span>
+                ({cart.reduce((sum, item) => sum + item.quantity, 0)})
+              </span>
+            </h2>
+          </div>
+          <button
+            type="button"
+            className="icon-close"
+            onClick={onClose}
+            aria-label="Close cart"
+          >
+            ×
+          </button>
+        </div>
+        <div className="cart-lines">
+          {!lines.length && (
+            <div className="empty-cart">
+              <span>◯</span>
+              <h3>Your cart is waiting</h3>
+              <p>Find something that feels like you.</p>
+              <button className="button button-dark" onClick={onClose}>
+                EXPLORE THE DROP
+              </button>
+            </div>
+          )}
+          {lines.map((item) => (
+            <div className="cart-line" key={`${item.id}-${item.size}`}>
+              <img src={item.product.image} alt="" />
+              <div className="cart-line-info">
+                <h3>{item.product.name}</h3>
+                <p>Size: {item.size}</p>
+                <strong>{formatNaira(item.product.price)}</strong>
+                <div className="quantity-control">
+                  <button
+                    type="button"
+                    onClick={() => onQuantity(item.id, item.size, -1)}
+                    aria-label="Decrease quantity"
+                  >
+                    −
+                  </button>
+                  <span>{item.quantity}</span>
+                  <button
+                    type="button"
+                    disabled={item.quantity >= item.product.stock}
+                    onClick={() => onQuantity(item.id, item.size, 1)}
+                    aria-label="Increase quantity"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="remove-line"
+                onClick={() => onRemove(item.id, item.size)}
+                aria-label={`Remove ${item.product.name}`}
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+        {!!lines.length && (
+          <div className="cart-checkout">
+            <div className="subtotal">
+              <span>Subtotal</span>
+              <strong>{formatNaira(subtotal)}</strong>
+            </div>
+            <p>Shipping is calculated and confirmed via WhatsApp.</p>
+            <button
+              type="button"
+              className="button button-dark checkout-button"
+              onClick={checkout}
+            >
+              CHECKOUT VIA WHATSAPP <span>↗</span>
+            </button>
+          </div>
+        )}
+      </aside>
+    </>
+  );
+}
+
+function Footer() {
+  const [subscribed, setSubscribed] = useState(false);
+  function subscribe(event) {
+    event.preventDefault();
+    setSubscribed(true);
+  }
+  return (
+    <footer className="site-footer">
+      <div className="footer-main">
+        <div className="footer-brand">
+          <a className="wordmark footer-mark" href="#home">
+            FAVORITE<span>®</span>
+            <small>CLOTHING</small>
+          </a>
+          <p>
+            Faith-inspired fashion for everyday wear. Shop curated collections
+            made with care and purpose.
+          </p>
+          <div className="social-links">
+            <a href="https://instagram.com" target="_blank" rel="noreferrer">
+              IG ↗
+            </a>
+            <a href="https://tiktok.com" target="_blank" rel="noreferrer">
+              TK ↗
+            </a>
+            <a href="https://snapchat.com" target="_blank" rel="noreferrer">
+              SC ↗
+            </a>
+          </div>
+        </div>
+        <div className="footer-column">
+          <h3>SHOP</h3>
+          <a href="#shop">All Products</a>
+          <a href="#shop">Best Sellers</a>
+        </div>
+        <div className="footer-column">
+          <h3>COMPANY</h3>
+          <a href="#about">About Us</a>
+          <a href="#faq">FAQs</a>
+          <a href="#faq">Returns &amp; Refunds</a>
+        </div>
+        <div className="footer-column">
+          <h3>POLICIES</h3>
+          <a href="#policies">Terms</a>
+          <a href="#policies">Privacy</a>
+          <a href="#policies">Returns</a>
+        </div>
+        <div className="footer-column footer-contact">
+          <h3>GET IN TOUCH</h3>
+          <a href="mailto:hello@favoriteclothing.ng">
+            hello@favoriteclothing.ng
+          </a>
+          <a href="tel:+2347050881599">+234 705 088 1599</a>
+        </div>
+        <form className="newsletter" onSubmit={subscribe}>
+          <label htmlFor="newsletter-email">STAY IN TOUCH</label>
+          <p>Sign up for exclusive offers and new drops.</p>
+          <div>
+            <input
+              id="newsletter-email"
+              type="email"
+              placeholder="Your email address"
+              required
+            />
+            <button type="submit">
+              {subscribed ? "THANK YOU ✓" : "SUBSCRIBE ↗"}
+            </button>
+          </div>
+        </form>
+      </div>
+      <div className="footer-bottom">
+        <span>© 2026 [only_1victor]. All rights reserved.</span>
+        <span>
+          Developed by Victor |{" "}
+          <a
+            href="https://wa.me/2347016402733"
+            target="_blank"
+            rel="noreferrer"
+          >
+            +2347016402733
+          </a>
+        </span>
+      </div>
+    </footer>
+  );
+}
+
+export default function Storefront({
+  products,
+  cart,
+  cartCount,
+  onAdd,
+  onQuantity,
+  onRemove,
+  onAdmin,
+  isStoreAdmin,
+  catalogLoading,
+  statusMessage,
+}) {
+  const [activeFilter, setActiveFilter] = useState("All");
+  const [search, setSearch] = useState("");
+  const [cartOpen, setCartOpen] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(8);
+  const [toast, setToast] = useState("");
+
+  useEffect(() => {
+    function onSearch(event) {
+      setSearch(event.detail || "");
+    }
+    window.addEventListener("store-search", onSearch);
+    return () => window.removeEventListener("store-search", onSearch);
+  }, []);
+
+  const displayedProducts = useMemo(
+    () =>
+      products
+        .filter((product) => {
+          const matchesFilter =
+            activeFilter === "All" || product.category === activeFilter;
+          const matchesSearch = `${product.name} ${product.category}`
+            .toLowerCase()
+            .includes(search.toLowerCase());
+          return matchesFilter && matchesSearch;
+        })
+        .slice(0, visibleCount),
+    [products, activeFilter, search, visibleCount],
+  );
+
+  function add(product, size) {
+    onAdd(product, size);
+    setToast(`${product.name} added to your cart`);
+    window.setTimeout(() => setToast(""), 2600);
+  }
+  function quickOrder(product, size) {
+    window.open(
+      whatsappLink(
+        `Hello Favorite Clothing, I’m interested in ${product.name} (Size ${size}) — ${formatNaira(product.price)}. Is it available?`,
+      ),
+      "_blank",
+      "noopener,noreferrer",
+    );
+  }
+  function selectCollection(filter) {
+    setActiveFilter(filter);
+    document.querySelector("#shop")?.scrollIntoView({ behavior: "smooth" });
+  }
+
+  return (
+    <>
+      <Header
+        cartCount={cartCount}
+        onAdmin={onAdmin}
+        onCart={() => setCartOpen(true)}
+        isStoreAdmin={isStoreAdmin}
+      />
+      {statusMessage && (
+        <div className="store-status" role="alert">
+          {statusMessage}
+        </div>
+      )}
+      <main>
+        <section className="hero-section" id="home">
+          <img
+            className="hero-photo"
+            src="https://images.unsplash.com/photo-1523398002811-999ca8dec234?auto=format&fit=crop&w=2200&q=90"
+            alt="Streetwear editorial featuring modern everyday style"
+          />
+          <div className="hero-shade" />
+          <div className="hero-copy">
+            <span className="hero-kicker">
+              <i /> NEW COLLECTION — 2026
+            </span>
+            <h1>
+              WALK IN
+              <br />
+              <em>YOUR</em> PURPOSE.
+            </h1>
+            <p>
+              Faith in every thread. Made for wherever your journey takes you.
+            </p>
+            <a className="button button-light" href="#shop">
+              SHOP THE DROP <span>↗</span>
+            </a>
+          </div>
+          <div className="hero-bottom">
+            <span>01 — EVERYDAY, WITH INTENTION</span>
+            <span>LAGOS, NIGERIA · WORLDWIDE SHIPPING</span>
+          </div>
+          <div className="hero-side-note">
+            BUILT ON BELIEF · WORN WITH PURPOSE
+          </div>
+        </section>
+
+        <section className="collection-section section-pad" id="collections">
+          <div className="section-heading">
+            <div>
+              <span className="eyebrow">FIND YOUR EVERYDAY</span>
+              <h2>THE COLLECTIONS</h2>
+            </div>
+            <p>Pieces to move in. Stories to stand for.</p>
+          </div>
+          <div className="collection-strip">
+            {collections.map((collection, index) => (
+              <article
+                className="collection-card"
+                key={collection.title}
+                onClick={() => selectCollection(collection.filter)}
+              >
+                <img src={collection.image} alt="" loading="lazy" />
+                <div className="collection-overlay" />
+                <div className="collection-copy">
+                  <span>0{index + 1} / COLLECTION</span>
+                  <h3>{collection.title}</h3>
+                  <p>{collection.note}</p>
+                  <button type="button">SHOP NOW ↗</button>
+                </div>
+              </article>
+            ))}
+          </div>
+          <div className="collection-scroll-note">
+            SCROLL TO EXPLORE <span>⟶</span>
+          </div>
+        </section>
+
+        <section className="shop-section section-pad" id="shop">
+          <div className="section-heading shop-heading">
+            <div>
+              <span className="eyebrow">CURATED FOR YOUR JOURNEY</span>
+              <h2>
+                THE LATEST DROP
+                <span className="drop-count">
+                  {products.length.toString().padStart(2, "0")}
+                </span>
+              </h2>
+            </div>
+            <p>Good things, made to be lived in.</p>
+          </div>
+          <div
+            className="filter-row"
+            role="tablist"
+            aria-label="Filter products"
+          >
+            {filters.map((filter) => (
+              <button
+                key={filter}
+                type="button"
+                role="tab"
+                aria-selected={activeFilter === filter}
+                className={activeFilter === filter ? "filter-active" : ""}
+                onClick={() => {
+                  setActiveFilter(filter);
+                  setVisibleCount(8);
+                }}
+              >
+                {filter}
+                <span>·</span>
+              </button>
+            ))}
+          </div>
+          {search && (
+            <p className="search-results">
+              Showing results for “{search}”{" "}
+              <button onClick={() => setSearch("")}>Clear</button>
+            </p>
+          )}
+          {catalogLoading ? (
+            <div className="no-results">Loading the latest pieces…</div>
+          ) : displayedProducts.length ? (
+            <div className="product-grid">
+              {displayedProducts.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  onAdd={add}
+                  onQuickOrder={quickOrder}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="no-results">
+              No pieces found. Try another search or collection.
+            </div>
+          )}
+          {products.filter(
+            (product) =>
+              activeFilter === "All" || product.category === activeFilter,
+          ).length > visibleCount && (
+            <button
+              className="button button-outline see-more"
+              onClick={() => setVisibleCount((count) => count + 8)}
+            >
+              SEE MORE PRODUCTS <span>↓</span>
+            </button>
+          )}
+        </section>
+
+        <section className="manifesto" id="about">
+          <span className="eyebrow">NOT JUST WHAT YOU WEAR</span>
+          <h2>
+            WEAR WHAT
+            <br />
+            <em>YOU BELIEVE.</em>
+          </h2>
+          <p>
+            Created for the ones building with faith, moving with intention, and
+            choosing their own direction.
+          </p>
+          <a href="#shop">DISCOVER YOUR PIECE ↗</a>
+          <span className="manifesto-cross">✳</span>
+        </section>
+
+        <section className="faq-section section-pad" id="faq">
+          <div className="faq-intro">
+            <span className="eyebrow">NEED A HAND?</span>
+            <h2>
+              GOOD TO
+              <br />
+              KNOW.
+            </h2>
+            <p>Everything you need to make your next favourite easy.</p>
+            <a
+              href="https://wa.me/2347050881599"
+              target="_blank"
+              rel="noreferrer"
+            >
+              ASK US ON WHATSAPP ↗
+            </a>
+          </div>
+          <div className="faq-list">
+            {faqs.map(([question, answer], index) => (
+              <details key={question} className="faq-item">
+                <summary>
+                  <span>0{index + 1}</span>
+                  <strong>{question}</strong>
+                  <i>+</i>
+                </summary>
+                <p>{answer}</p>
+              </details>
+            ))}
+          </div>
+        </section>
+      </main>
+      <Footer />
+      <a
+        className="floating-whatsapp"
+        href="https://wa.me/2347050881599"
+        target="_blank"
+        rel="noreferrer"
+        aria-label="Chat with us on WhatsApp"
+      >
+        <span>◉</span>
+        <small>CHAT WITH US</small>
+      </a>
+      <CartDrawer
+        open={cartOpen}
+        onClose={() => setCartOpen(false)}
+        products={products}
+        cart={cart}
+        onQuantity={onQuantity}
+        onRemove={onRemove}
+      />
+      {toast && (
+        <div className="toast" role="status">
+          {toast}
+          <button type="button" onClick={() => setCartOpen(true)}>
+            VIEW CART ↗
+          </button>
+        </div>
+      )}
+    </>
+  );
+}
